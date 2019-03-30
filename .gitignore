@@ -33,3 +33,4 @@ _NCrunch*
 /.vs
 /.idea
 .vs/
+/ILRepack/Properties/launchSettings.json

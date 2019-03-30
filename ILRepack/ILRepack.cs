@@ -379,18 +379,31 @@ namespace ILRepacking
 
                 if (signingStep.KeyPair != null)
                 {
-                    parameters = new WriterParameters
+                    var rp = new ReaderParameters();
+                    if (Options.DebugInfo)
                     {
-                        StrongNameKeyPair = signingStep.KeyPair,
-                        WriteSymbols = Options.DebugInfo && PrimaryAssemblyMainModule.SymbolReader != null,
-                        SymbolWriterProvider = PrimaryAssemblyMainModule.SymbolReader?.GetWriterProvider(),
-                    };
-                    using (var assembly = AssemblyDefinition.ReadAssembly(Options.OutputFile))
+                        rp.ReadSymbols = true;
+                        rp.SymbolReaderProvider = new DefaultSymbolReaderProvider(false);
+                    }
+                    var oldTempDir = Path.GetDirectoryName(Options.OutputFile);
+                    using (var assembly = AssemblyDefinition.ReadAssembly(Options.OutputFile, rp))
                     {
+                        parameters = new WriterParameters
+                        {
+                            StrongNameKeyPair = signingStep.KeyPair,
+                            WriteSymbols = Options.DebugInfo && assembly.MainModule.SymbolReader != null,
+                            SymbolWriterProvider = assembly.MainModule.SymbolReader?.GetWriterProvider(),
+                        };
+
                         var tempFile = GetTempFile(Options.OutputFile);
                         assembly.Write(tempFile, parameters);
                         Options.OutputFile = tempFile;
                     }
+                    foreach (var srcFileName in Directory.EnumerateFiles(oldTempDir))
+                    {
+                        File.Delete(srcFileName);
+                    }
+                    Directory.Delete(oldTempDir, false);
                 }
 
                 MoveTempFile(Options.OutputFile, actualOutFile);

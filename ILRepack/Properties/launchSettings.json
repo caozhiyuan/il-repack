@@ -1,9 +1,0 @@
-{
-  "profiles": {
-    "ILRepack": {
-      "commandName": "Project",
-      "commandLineArgs": "/out:C:\\Users\\Administrator\\source\\repos\\ConsoleApp2\\ConsoleApp2\\bin\\Debug\\ClassLibrary.dll /keyfile:D:\\Code\\SkyAPM-dotnet\\tools\\skyapm.snk /internalize ClassLibrary1.dll ",
-      "workingDirectory": "C:\\Users\\Administrator\\source\\repos\\ConsoleApp2\\ConsoleApp2\\bin\\Debug"
-    }
-  }
-}
