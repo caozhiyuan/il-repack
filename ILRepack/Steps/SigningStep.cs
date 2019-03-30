@@ -21,6 +21,12 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
+#if !ISNETFULLFRAMEWORK
+using StrongNameKeyPair = Mono.Cecil.StrongNameKeyPair;
+#else
+using StrongNameKeyPair = System.Reflection.StrongNameKeyPair;
+#endif
+
 namespace ILRepacking.Steps
 {
     class SigningStep : IRepackStep

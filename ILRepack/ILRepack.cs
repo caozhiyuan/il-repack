@@ -29,6 +29,12 @@ using ILRepacking.Steps.SourceServerData;
 using ILRepacking.Steps.Win32Resources;
 using Mono.Cecil.Cil;
 
+#if !ISNETFULLFRAMEWORK
+using StrongNameKeyPair = Mono.Cecil.StrongNameKeyPair;
+#else
+using StrongNameKeyPair = System.Reflection.StrongNameKeyPair;
+#endif
+
 namespace ILRepacking
 {
     public class ILRepack : IRepackContext
@@ -345,9 +351,6 @@ namespace ILRepacking
                 
                 var parameters = new WriterParameters
                 {
-                    #if ISNETFULLFRAMEWORK
-                    StrongNameKeyPair = signingStep.KeyPair,
-                    #endif
                     WriteSymbols = Options.DebugInfo && PrimaryAssemblyMainModule.SymbolReader != null,
                     SymbolWriterProvider = PrimaryAssemblyMainModule.SymbolReader?.GetWriterProvider(),
                 };
@@ -373,6 +376,22 @@ namespace ILRepacking
                 GlobalAssemblyResolver.Dispose();
 
                 win32ResourceStep.Patch(Options.OutputFile);
+
+                if (signingStep.KeyPair != null)
+                {
+                    parameters = new WriterParameters
+                    {
+                        StrongNameKeyPair = signingStep.KeyPair,
+                        WriteSymbols = Options.DebugInfo && PrimaryAssemblyMainModule.SymbolReader != null,
+                        SymbolWriterProvider = PrimaryAssemblyMainModule.SymbolReader?.GetWriterProvider(),
+                    };
+                    using (var assembly = AssemblyDefinition.ReadAssembly(Options.OutputFile))
+                    {
+                        var tempFile = GetTempFile(Options.OutputFile);
+                        assembly.Write(tempFile, parameters);
+                        Options.OutputFile = tempFile;
+                    }
+                }
 
                 MoveTempFile(Options.OutputFile, actualOutFile);
                 Options.OutputFile = actualOutFile;
